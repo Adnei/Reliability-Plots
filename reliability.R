@@ -1,18 +1,19 @@
 library(dplyr)
+if (!require("plotly")) install.packages("plotly")
 library(plotly)
 
 # -----------------------------------------------------------------------------#
 #                                Equations                                     #
 # -----------------------------------------------------------------------------#
 
-serie_parallel <- function(r_key, coverage, n_subsystem ){
+serie_parallel <- function(r_sw, coverage, n_subsystem ){
   r_component <- 0.9
-  (r_component + (1 - r_component) * coverage * r_key * r_component) ^ n_subsystem
+  (r_component + (1 - r_component) * coverage * r_sw * r_component) ^ n_subsystem
 }
 
-parallel_serie <- function(r_key, coverage, n_subsystem ){
+parallel_serie <- function(r_sw, coverage, n_subsystem ){
   r_component <- 0.9
-  r_component ^ n_subsystem + (1 - r_component ^ n_subsystem) * coverage * r_key * r_component ^ n_subsystem
+  r_component ^ n_subsystem + (1 - r_component ^ n_subsystem) * coverage * r_sw * r_component ^ n_subsystem
 }
 
 
@@ -21,7 +22,7 @@ parallel_serie <- function(r_key, coverage, n_subsystem ){
 # -----------------------------------------------------------------------------#
 
 combinations.df <- data.frame(
-  r_key = seq(from = 0.8, to = 1, by = 0.02),
+  r_sw = seq(from = 0.8, to = 1, by = 0.02),
   coverage = seq(from = 0.8, to = 1, by = 0.02),
   n_subsystem = seq(from = 10, to = 1000, by = 99),
   stringsAsFactors=FALSE
@@ -32,7 +33,7 @@ combinations.df <- data.frame(
 # -----------------------------------------------------------------------------#
 
 # creates a combination matrix
-args_serie_parallel.df <- expand.grid(r_key = combinations.df$r_key,
+args_serie_parallel.df <- expand.grid(r_sw = combinations.df$r_sw,
   coverage = combinations.df$coverage,
   n_subsystem = combinations.df$n_subsystem)
 
@@ -48,7 +49,7 @@ result_serie_parallel.df <- mapply(serie_parallel,
 # -----------------------------------------------------------------------------#
 
 # creates a combination matrix
-args_parallel_serie.df <- expand.grid(r_key = combinations.df$r_key,
+args_parallel_serie.df <- expand.grid(r_sw = combinations.df$r_sw,
   coverage = combinations.df$coverage,
   n_subsystem = combinations.df$n_subsystem)
 
@@ -63,7 +64,7 @@ result_parallel_serie.df <- mapply(parallel_serie,
 #                          Plotting all the data                               #
 # -----------------------------------------------------------------------------#
 
-my_plot <- plot_ly(x = args_serie_parallel.df$r_key * args_serie_parallel.df$coverage,
+my_plot <- plot_ly(x = args_serie_parallel.df$r_sw * args_serie_parallel.df$coverage,
   y = args_serie_parallel.df$n_subsystem,
   z = result_serie_parallel.df,
   type = 'scatter3d',
@@ -74,9 +75,9 @@ my_plot <- plot_ly(x = args_serie_parallel.df$r_key * args_serie_parallel.df$cov
 )
 my_plot <- my_plot %>% add_trace(z = result_parallel_serie.df, name = 'Paralelo-Série',
   line = list(color = 'blue', width = 4))
-my_plot <- my_plot %>% layout(title = "Rs X C*Rkey X N",
+my_plot <- my_plot %>% layout(title = "Rs X C*Rswitch X N",
          scene = list(
-           xaxis = list(title = "Índice de Cobertura * Rkey(t)"),
+           xaxis = list(title = "Índice de Cobertura * Rswitch(t)"),
            yaxis = list (title = "Número de subsistemas"),
            zaxis = list (title = "Confiabilidade Rs(t)")
          ))
